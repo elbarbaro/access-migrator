@@ -20,14 +20,39 @@ selection = st.sidebar.radio("Go to", list(PAGES.keys()))
 
 st.title("Access to Barbaro Migrator")
 
-if selection == "Configuration":
+def config_page():
     st.header("Configuration")
-    st.info(PAGES[selection])
-    st.warning("Configuration UI not implemented yet. Please use the Migration page for now.")
+    st.info(PAGES["Configuration"])
+    st.subheader("PostgreSQL Connection Settings")
+
+    # Cargar valores previos si existen
+    pg_host = st.text_input("PostgreSQL Host", value=st.session_state.get("pg_host", "localhost"))
+    pg_port = st.number_input("Port", value=st.session_state.get("pg_port", 5432))
+    pg_db = st.text_input("Database Name", value=st.session_state.get("pg_db", ""))
+    pg_user = st.text_input("User", value=st.session_state.get("pg_user", ""))
+    pg_pass = st.text_input("Password", type="password", value=st.session_state.get("pg_pass", ""))
+
+    if st.button("Save Configuration"):
+        st.session_state["pg_host"] = pg_host
+        st.session_state["pg_port"] = pg_port
+        st.session_state["pg_db"] = pg_db
+        st.session_state["pg_user"] = pg_user
+        st.session_state["pg_pass"] = pg_pass
+        st.success("Configuration saved!")
+
+if selection == "Configuration":
+    config_page()
 
 elif selection == "Migration":
     st.header("Migration")
     st.info(PAGES[selection])
+
+    # Recuperar configuración centralizada
+    pg_host = st.session_state.get("pg_host", "localhost")
+    pg_port = st.session_state.get("pg_port", 5432)
+    pg_db = st.session_state.get("pg_db", "")
+    pg_user = st.session_state.get("pg_user", "")
+    pg_pass = st.session_state.get("pg_pass", "")
 
     with st.form("migration_form"):
         st.subheader("Source: Access Databases (Multiple Years)")
@@ -72,11 +97,7 @@ elif selection == "Migration":
                         st.warning(f"No se pudo eliminar el archivo temporal {temp_path}: {e}")
         
         st.subheader("Target: PostgreSQL")
-        pg_host = st.text_input("PostgreSQL Host", value="localhost")
-        pg_port = st.number_input("Port", value=5432)
-        pg_db = st.text_input("Database Name")
-        pg_user = st.text_input("User")
-        pg_pass = st.text_input("Password", type="password")
+        st.write(f"**Host:** {pg_host} | **Port:** {pg_port} | **DB:** {pg_db} | **User:** {pg_user}")
         
         st.subheader("Transformation Rules (JSON, applies to all tables)")
         rules_json = st.text_area("Rules (e.g. {\"col1\": {\"trim\": true}})", value="{}")
@@ -170,12 +191,15 @@ elif selection == "Query":
     st.header("Query")
     st.info(PAGES[selection])
 
+    # Recuperar configuración centralizada
+    pg_host = st.session_state.get("pg_host", "localhost")
+    pg_port = st.session_state.get("pg_port", 5432)
+    pg_db = st.session_state.get("pg_db", "")
+    pg_user = st.session_state.get("pg_user", "")
+    pg_pass = st.session_state.get("pg_pass", "")
+
     st.subheader("PostgreSQL Connection")
-    pg_host = st.text_input("PostgreSQL Host", value="localhost", key="query_pg_host")
-    pg_port = st.number_input("Port", value=5432, key="query_pg_port")
-    pg_db = st.text_input("Database Name", key="query_pg_db")
-    pg_user = st.text_input("User", key="query_pg_user")
-    pg_pass = st.text_input("Password", type="password", key="query_pg_pass")
+    st.write(f"**Host:** {pg_host} | **Port:** {pg_port} | **DB:** {pg_db} | **User:** {pg_user}")
 
     st.subheader("SQL Query")
     default_query = "SELECT * FROM students_unified LIMIT 100"
@@ -184,7 +208,7 @@ elif selection == "Query":
 
     if run_query:
         try:
-            # Conectar a PostgreSQL
+            # Conectar a PostgreSQL usando la configuración centralizada
             engine = pg_writer.connect_postgres(pg_user, pg_pass, pg_host, pg_port, pg_db)
             
             # Ejecutar la consulta
@@ -200,4 +224,4 @@ elif selection == "Query":
             
         except Exception as e:
             st.error(f"Query failed: {str(e)}")
-            st.error("Error details:", e) 
+            st.error("Error details:", e)
