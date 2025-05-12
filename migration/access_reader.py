@@ -24,4 +24,15 @@ def get_table_schema(conn: pyodbc.Connection, table_name: str) -> List[Tuple[str
     return [(column[0], column[1]) for column in cursor.description]
 
 def read_table(conn: pyodbc.Connection, table_name: str) -> pd.DataFrame:
-    return pd.read_sql(f"SELECT * FROM [{table_name}]", conn) 
+    # Ejecutar la consulta usando pyodbc
+    cursor = conn.cursor()
+    cursor.execute(f"SELECT * FROM [{table_name}]")
+    
+    # Obtener los nombres de las columnas
+    columns = [column[0] for column in cursor.description]
+    
+    # Obtener los datos
+    data = cursor.fetchall()
+    
+    # Crear el DataFrame
+    return pd.DataFrame.from_records(data, columns=columns) 

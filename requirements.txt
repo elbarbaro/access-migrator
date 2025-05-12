@@ -1,6 +1,8 @@
 streamlit
-pyodbc
-psycopg2-binary
-sqlalchemy
-pandas
+pyodbc==4.0.39
+pywin32==306
+pandas==2.1.4
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.9
 pypyodbc
+faker==20.1.0
